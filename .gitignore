@@ -1,0 +1,7 @@
+#Terraform
+.DS_Store
+.terraform/
+terrafrom.tfstate
+terraform.tfstate.*.backup
+*.tfplan
+tmp/
