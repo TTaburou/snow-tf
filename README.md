@@ -178,8 +178,11 @@ Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
 ### GitHubにシークレットを登録
 GitHuibのSettings→Secrets and variables→Actionsに以下の３つを追加します。
 - SNOWFLAKE_USER `tf-snow`
+ -  <img width="1440" alt="git_sf_usr" src="https://github.com/user-attachments/assets/209ee58c-f6f0-4441-80e4-7aa2b66dae22">
 - SNOWFLAKE_PRIVATE_KEY
+ - <img width="1440" alt="git_sf_pk" src="https://github.com/user-attachments/assets/9d677c1d-2201-40e9-a168-c88fa2e3163e">
 - SNOWFLAKE_ACCOUNT="${アカウント識別子}"
+ -  <img width="1440" alt="git_sf_acnt" src="https://github.com/user-attachments/assets/57300b4d-409d-4e88-b498-948fe80c6165">
 ### workflowの作成
 [こちら](https://github.com/marketplace/actions/opentofu-setup-tofu)を参考にmain.ymlを作成します。
 ```
