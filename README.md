@@ -1,7 +1,7 @@
 # snow-tf
-`open tofu`から`snowflake`へオブジェクトの作成を行います。
+`OpenTofu`から`Snowflake`へオブジェクトの作成を行います。
 # Snowflakeの準備
-https://qiita.com/hiro-wa/items/4aeb1c7346714d6b5e53
+[参考リンク](https://qiita.com/hiro-wa/items/4aeb1c7346714d6b5e53)
 ### 鍵の生成
 ```
 $ cd ~/.ssh
@@ -33,8 +33,9 @@ $ export SNOWFLAKE_USER="tf-snow"
 $ export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_tf_snow_key.p8"
 $ export SNOWFLAKE_ACCOUNT="${アカウント識別子}"
 ```
-冒頭の記事では、`アカウントLocator`と`リージョンID`を環境変数に設定していますが、非推奨となっているため[アカウント識別子](https://docs.snowflake.com/ja/user-guide/admin-account-identifier)を使います。<br>
+参照の記事では、`アカウントLocator`と`リージョンID`を環境変数に設定していますが、非推奨となっているため[アカウント識別子](https://docs.snowflake.com/ja/user-guide/admin-account-identifier)を使います。<br>
 ``環境変数はターミナルを立ち上げる度に入力しないといけないので、snow.envなどのファイルを用意しそこに記載しておくと次回以降入力が楽です。``
+※クレデンシャルのハードコードは非推奨ですが、[プロバイダのパラメータとして指定](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs)することも可能です。
 
 # open tofuの準備
 ### asdfのインストール
@@ -43,7 +44,7 @@ $ export SNOWFLAKE_ACCOUNT="${アカウント識別子}"
 gitリポジトリの.tool-versionsが存在するディレクトリで実行します。
 `ToDo`
 ### tfファイルの作成
-main.tfを作成します。
+main.tfを作成します。</br>
 データベースとウェアハウスをSnowflakeに作成します。
 ```
 terraform {
@@ -169,4 +170,54 @@ snowflake_database.db: Creation complete after 1s [id=TF_DEMO_DB]
 snowflake_warehouse.warehouse: Creation complete after 1s [id=TF_DEMO_WH]
 
 Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+```
+その他のリソースは[terraformドキュメント](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs)が参考になります。
+# GitHubactionsの追加
+[こちらの記事](https://zenn.dev/dataheroes/articles/dfc62ed51ef925)を参考にymlを作成します。<br>
+記事ではアカウントとパスワードを使用しますが、アカウント識別子とキーペア認証します。
+### GitHubにシークレットを登録
+GitHuibのSettings→Secrets and variables→Actionsに以下の３つを追加します。
+- SNOWFLAKE_USER `tf-snow`
+- SNOWFLAKE_PRIVATE_KEY
+- SNOWFLAKE_ACCOUNT="${アカウント識別子}"
+### workflowの作成
+[こちら](https://github.com/marketplace/actions/opentofu-setup-tofu)を参考にmain.ymlを作成します。
+```
+name: OpenToFu Plan and Apply on Main Branch Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: 'tofu Plan'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modules/
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup OpenTofu
+      uses: opentofu/setup-opentofu@v1
+
+    - name: OpenTofu Initialize
+      run: tofu init -no-color
+
+    - name: OpenTofu Validate
+      run: tofu validate -no-color
+
+    - name: OpenTofu Plan
+      run: tofu plan -no-color
+
+    - name: OpenTofu Apply
+      run: tofu apply -no-color -auto-approve
 ```
